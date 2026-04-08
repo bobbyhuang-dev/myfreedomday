@@ -10,9 +10,14 @@
 		"dev": "astro dev",
 		"build": "astro build",
 		"preview": "astro preview",
+		"pages:deploy": "astro build && wrangler pages deploy dist",
+		"pages:dev": "pnpm build && wrangler pages dev ./dist",
 		"astro": "astro"
 	},
 	"dependencies": {
 		"astro": "^6.1.4"
+	},
+	"devDependencies": {
+		"wrangler": "^4.81.0"
 	}
 }

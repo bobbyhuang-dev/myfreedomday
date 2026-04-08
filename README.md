@@ -10,21 +10,29 @@ Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/conten
 | `pnpm dev` | Start dev server at `http://localhost:4321` |
 | `pnpm build` | Build to `dist/` |
 | `pnpm preview` | Preview the production build locally |
+| `pnpm pages:deploy` | Build and upload to Cloudflare Pages (requires `wrangler login`) |
+| `pnpm pages:dev` | Build and serve `dist/` with the Pages dev proxy |
 
 ## Cloudflare Pages
 
-1. Connect this repository to Cloudflare Pages.
-2. **Install command:** `pnpm install` (or leave default; Pages detects `pnpm-lock.yaml`).
-3. **Build command:** `pnpm build`
-4. **Build output directory:** `dist`
-5. **Environment:** Node 22.x matches `package.json` engines.
+**Git (recommended):** In the [Cloudflare dashboard](https://dash.cloudflare.com/) go to **Workers & Pages** → **Create** → **Pages** → **Connect to Git**, pick this repo, then confirm build settings:
 
-After the first deploy, set `site` in `astro.config.mjs` to your real Pages URL (or custom domain) so canonical URLs and RSS feeds behave correctly if you add them later.
+| Setting | Value |
+|--------|--------|
+| **Framework preset** | Astro (or None) |
+| **Build command** | `pnpm build` |
+| **Build output directory** | `dist` |
+| **Root directory** | `/` (repo root) |
 
-Optional CLI deploy after a local build:
+Pages reads **`.nvmrc`** (Node 22) for the build environment. `wrangler.jsonc` names the project **`myfreedomday`** and sets `pages_build_output_dir` so Wrangler matches the dashboard project.
+
+After the first deploy, set `site` in `astro.config.mjs` to your real `*.pages.dev` URL or custom domain so canonical URLs behave correctly.
+
+**CLI deploy** (creates the project on first run if it does not exist):
 
 ```bash
-pnpm dlx wrangler pages deploy dist --project-name=myfreedomday
+pnpm exec wrangler login
+pnpm pages:deploy
 ```
 
 ## Content
