@@ -12,6 +12,7 @@
 		"preview": "astro preview",
 		"pages:deploy": "astro build && wrangler pages deploy dist",
 		"pages:upload": "wrangler pages deploy dist",
+		"pages:noop": "node -e \"process.exit(0)\"",
 		"pages:dev": "pnpm build && wrangler pages dev ./dist",
 		"astro": "astro"
 	},

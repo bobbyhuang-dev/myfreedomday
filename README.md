@@ -37,7 +37,16 @@ Pages reads **`.nvmrc`** (Node 22) for the build environment. `wrangler.jsonc` s
 
    which runs `wrangler pages deploy dist`. Do **not** use `npx wrangler deploy` (that targets **Workers** and needs a Worker entrypoint; it caused the “Missing entry-point” error).
 
-**Non-production branch deploy command:** leave empty unless you have a specific preview workflow. Remove unrelated commands such as `npx wrangler versions upload` (that is for **Workers gradual rollouts**, not this static site).
+**Non-production branch deploy command:** The dashboard sometimes **cannot save** when this field is blank (“Invalid request body” / internal error)—treating empty strings as invalid is a Cloudflare UI quirk.
+
+Use one of these instead:
+
+| Approach | Value | When to use |
+|----------|--------|-------------|
+| **Same as production (recommended)** | `pnpm pages:upload` | Preview/PR branches get a real Pages preview deployment. |
+| **No-op placeholder** | `pnpm pages:noop` | Only if you must satisfy the form and accept odd preview behavior; exits immediately with success. |
+
+Avoid unrelated commands such as `npx wrangler versions upload` (Workers gradual rollouts, not this static site).
 
 After the first deploy, set `site` in `astro.config.mjs` to your real `*.pages.dev` URL or custom domain so canonical URLs behave correctly.
 
