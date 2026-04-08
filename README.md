@@ -23,8 +23,13 @@ Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/conten
 | **Build command** | `pnpm build` |
 | **Build output directory** | `dist` |
 | **Root directory** | `/` (repo root) |
+| **Deploy command** | *Leave empty* (do not set a Wrangler/Workers deploy step) |
 
-Pages reads **`.nvmrc`** (Node 22) for the build environment. `wrangler.jsonc` names the project **`myfreedomday`** and sets `pages_build_output_dir` so Wrangler matches the dashboard project.
+Pages reads **`.nvmrc`** (Node 22) for the build environment. After `pnpm build`, Cloudflare publishes **`dist/`** for you—no `wrangler` step is required in CI.
+
+`wrangler.jsonc` is for **local** `pnpm pages:deploy` and naming consistency; it is not a signal for `wrangler deploy` on Pages.
+
+**If the build succeeds but deployment fails** with “Missing entry-point to Worker script” or a warning that `wrangler pages deploy` should be used instead: your project has **Workers-style** `npx wrangler deploy` configured. Open **Workers & Pages** → your project → **Settings** → **Build** (or **Builds & deployments**) and **clear** the deploy / Wrangler command, or replace it with nothing. Using `npx wrangler deploy` is for **Workers**, not static Pages sites.
 
 After the first deploy, set `site` in `astro.config.mjs` to your real `*.pages.dev` URL or custom domain so canonical URLs behave correctly.
 
