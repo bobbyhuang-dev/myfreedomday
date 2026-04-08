@@ -11,6 +11,7 @@ Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/conten
 | `pnpm build` | Build to `dist/` |
 | `pnpm preview` | Preview the production build locally |
 | `pnpm pages:deploy` | Build and upload to Cloudflare Pages (requires `wrangler login`) |
+| `pnpm pages:upload` | Upload existing `dist/` only (used as **Deploy command** in Cloudflare when that field is required) |
 | `pnpm pages:dev` | Build and serve `dist/` with the Pages dev proxy |
 
 ## Cloudflare Pages
@@ -23,13 +24,20 @@ Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/conten
 | **Build command** | `pnpm build` |
 | **Build output directory** | `dist` |
 | **Root directory** | `/` (repo root) |
-| **Deploy command** | *Leave empty* (do not set a Wrangler/Workers deploy step) |
+| **Deploy command** | See below—depends whether the UI marks it required |
 
-Pages reads **`.nvmrc`** (Node 22) for the build environment. After `pnpm build`, Cloudflare publishes **`dist/`** for you—no `wrangler` step is required in CI.
+Pages reads **`.nvmrc`** (Node 22) for the build environment. `wrangler.jsonc` sets the Pages project name (`myfreedomday`) and output dir so Wrangler knows where to upload.
 
-`wrangler.jsonc` is for **local** `pnpm pages:deploy` and naming consistency; it is not a signal for `wrangler deploy` on Pages.
+**Deploy command (two cases):**
 
-**If the build succeeds but deployment fails** with “Missing entry-point to Worker script” or a warning that `wrangler pages deploy` should be used instead: your project has **Workers-style** `npx wrangler deploy` configured. Open **Workers & Pages** → your project → **Settings** → **Build** (or **Builds & deployments**) and **clear** the deploy / Wrangler command, or replace it with nothing. Using `npx wrangler deploy` is for **Workers**, not static Pages sites.
+1. **Field is optional** — leave it blank. Cloudflare will publish **`dist/`** after `pnpm build`.
+2. **Field is required** (your dashboard shows “Required”) — the build still runs **`pnpm build`** first; the deploy step must upload static assets with **Pages**, not Workers. Use:
+
+   **`pnpm pages:upload`**
+
+   which runs `wrangler pages deploy dist`. Do **not** use `npx wrangler deploy` (that targets **Workers** and needs a Worker entrypoint; it caused the “Missing entry-point” error).
+
+**Non-production branch deploy command:** leave empty unless you have a specific preview workflow. Remove unrelated commands such as `npx wrangler versions upload` (that is for **Workers gradual rollouts**, not this static site).
 
 After the first deploy, set `site` in `astro.config.mjs` to your real `*.pages.dev` URL or custom domain so canonical URLs behave correctly.
 
