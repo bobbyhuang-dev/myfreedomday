@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const guides = await getCollection('guides');
+const guideLinks = [...guides].sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+const updates = await getCollection('updates', ({ data }) => !data.draft);
+const recentUpdates = [...updates]
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+---
+
+<BaseLayout title="MyFreedomDay">
+	<section class="hero">
+		<h1>Information you can ship from Git</h1>
+		<p class="lede">
+			This demo shows an Astro + TypeScript site with Markdown stored in the repository, built to static files, and ready to deploy to
+			Cloudflare Pages. All copy below is dummy text.
+		</p>
+	</section>
+
+	<h2 class="section-title">Guides</h2>
+	<ul class="card-grid">
+		{
+			guideLinks.map((g) => (
+				<li class="card">
+					<h2>
+						<a href={`/guides/${g.id}`}>{g.data.title}</a>
+					</h2>
+					<p>{g.data.description}</p>
+				</li>
+			))
+		}
+	</ul>
+
+	<h2 class="section-title">Recent updates</h2>
+	{
+		recentUpdates.length === 0 ? (
+			<p class="muted">No updates yet.</p>
+		) : (
+			<ul class="card-grid">
+				{recentUpdates.map((u) => (
+					<li class="card">
+						<p class="meta">
+							<time datetime={u.data.pubDate.toISOString()}>
+								{u.data.pubDate.toLocaleDateString('en-US', {
+									year: 'numeric',
+									month: 'short',
+									day: 'numeric',
+								})}
+							</time>
+						</p>
+						<h2>
+							<a href={`/updates/${u.id}`}>{u.data.title}</a>
+						</h2>
+						<p>{u.data.description}</p>
+					</li>
+				))}
+			</ul>
+		)
+	}
+
+	<p class="muted" style="margin-top: 2.5rem;">
+		Edit Markdown in <code>src/content/</code>, run <code>pnpm dev</code> locally, and publish with your usual Git workflow.
+	</p>
+</BaseLayout>
