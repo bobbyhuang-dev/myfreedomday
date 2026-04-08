@@ -10,11 +10,14 @@
 		"dev": "astro dev",
 		"build": "astro build",
 		"preview": "astro preview",
-		"pages:deploy": "astro build && wrangler pages deploy dist",
-		"pages:upload": "wrangler pages deploy dist",
+		"pages:deploy": "astro build && wrangler deploy",
+		"pages:upload": "wrangler deploy",
 		"pages:noop": "node -e \"process.exit(0)\"",
-		"pages:dev": "pnpm build && wrangler pages dev ./dist",
+		"pages:dev": "pnpm build && wrangler dev",
 		"astro": "astro"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["esbuild", "sharp", "workerd"]
 	},
 	"dependencies": {
 		"astro": "^6.1.4"

@@ -1,6 +1,6 @@
 # MyFreedomDay
 
-Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/content/` (validated with content collections), static HTML output suitable for **Cloudflare Pages**.
+Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/content/` (validated with content collections), static HTML output deployed with **Wrangler** as [**Workers Static Assets**](https://developers.cloudflare.com/workers/static-assets/) (recommended when Cloudflare’s CI cannot authenticate **`wrangler pages deploy`**).
 
 ## Commands
 
@@ -10,70 +10,51 @@ Informational demo site: **Astro** + **TypeScript**, **Markdown** in `src/conten
 | `pnpm dev` | Start dev server at `http://localhost:4321` |
 | `pnpm build` | Build to `dist/` |
 | `pnpm preview` | Preview the production build locally |
-| `pnpm pages:deploy` | Build and upload to Cloudflare Pages (requires `wrangler login`) |
-| `pnpm pages:upload` | Upload `dist/` with **`wrangler pages deploy`** (needs a **Cloudflare Pages → Edit** API token in CI—see README) |
-| `pnpm pages:noop` | No-op (exit 0). Only for optional fields like **Version command**—**do not** rely on it for **Deploy** or the live site can stay on “Hello World” |
-| `pnpm pages:dev` | Build and serve `dist/` with the Pages dev proxy |
+| `pnpm pages:deploy` | `astro build` then **`wrangler deploy`** (Workers Static Assets; use `wrangler login` locally) |
+| `pnpm pages:upload` | **`wrangler deploy`** only—uploads `./dist` per `wrangler.jsonc` |
+| `pnpm pages:noop` | No-op (exit 0). Optional for **Version command** when the UI requires a value |
+| `pnpm pages:dev` | `pnpm build` then **`wrangler dev`** (serves the Worker + assets from config) |
 
-## Cloudflare Pages
+## Cloudflare (Workers Static Assets)
 
-**Git (recommended):** In the [Cloudflare dashboard](https://dash.cloudflare.com/) go to **Workers & Pages** → **Create** → **Pages** → **Connect to Git**, pick this repo, then confirm build settings:
+This repo uses [**Workers Static Assets**](https://developers.cloudflare.com/workers/static-assets/) (`wrangler deploy`), not **`wrangler pages deploy`**. The Pages API (`/pages/projects/...`) often returns **`Authentication error [code: 10000]`** for tokens that work fine with the **Workers** upload API—so CI deploy targets a **Worker** that serves files from `dist/`. See Cloudflare’s [migrate from Pages](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) guide.
+
+### Build settings (Git / Workers Builds)
 
 | Setting | Value |
 |--------|--------|
-| **Framework preset** | Astro (or None) |
 | **Build command** | `pnpm build` |
-| **Build output directory** | `dist` |
-| **Root directory** | `/` (repo root) |
-| **Deploy command** | **`pnpm pages:upload`** after you add a **Pages-capable API token** (see below). Use **`pnpm pages:noop`** only as a temporary placeholder—**not** as the final setting if the live site shows “Hello World” or a blank page. |
+| **Deploy command** | `pnpm pages:upload` |
+| **Version command** (if required) | `pnpm pages:noop` |
+| **Root directory** | `/` |
+| **Build output directory** | `dist` (Astro output; Wrangler reads the same folder via `assets.directory`) |
+| **Non-production branch deploy command** | Same as production — `pnpm pages:upload` — or `pnpm pages:noop` only if the UI breaks on empty and previews can wait |
 
-Pages reads **`.nvmrc`** (Node 22) for the build environment. `wrangler.jsonc` keeps the project name and output dir for Wrangler.
+**Node:** **`.nvmrc`** pins Node 22.
 
-### Blank page or “Hello World” on the live URL
+### API token (fixes error 10000 in CI)
 
-If **`pnpm build` succeeds** but the site only shows **Hello World**, a **blank** screen, or a generic stub, the **Deploy** step is probably **not publishing `dist/`**. A no-op (`pnpm pages:noop`) exits successfully but **uploads nothing**, so the edge may still run a **default Worker** or empty deployment.
+1. [API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token**.
+2. Use template **Edit Cloudflare Workers** (or custom: **Account** → **Workers Scripts** → **Edit**, plus **Account** → **Account Settings** → **Read** if needed).
+3. **Account resources:** include the account that owns the project.
+4. In the Cloudflare project → **Settings** → **Environment variables** (Production and Preview), set:
+   - **`CLOUDFLARE_API_TOKEN`** — the new token  
+   - **`CLOUDFLARE_ACCOUNT_ID`** — from Workers overview URL (`.../accounts/<id>/...`)  
+5. **Remove** any old **Pages-only** token you added for `wrangler pages deploy`; Workers deploy does not use the Pages REST API the same way.
 
-**Fix:** use a real upload:
+Local deploy: `pnpm exec wrangler login` then `pnpm pages:deploy`.
 
-1. In [API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → **Custom token**.
-2. **Permissions:** **Account** → **Cloudflare Pages** → **Edit** (add **Account** → **Account Settings** → **Read** if Wrangler asks for it).
-3. **Account Resources:** include your account.
-4. Open your **Pages** project → **Settings** → **Environment variables** (Production and Preview) and set **`CLOUDFLARE_API_TOKEN`** to that token’s value. (This overrides the restricted token the build injected before and fixes **`Authentication error [code: 10000]`** when using `pnpm pages:upload`.)
-5. Set **Deploy command** to **`pnpm pages:upload`** and **Version command** (if present) to **`pnpm pages:noop`** or match production per Cloudflare’s UI.
-6. **Redeploy** the latest commit.
+### Canonical URL (`site`)
 
-View **page source** on your `*.pages.dev` URL: you should see `<title>MyFreedomDay</title>` and the real layout—not a one-line Hello World.
+After the first successful deploy, Wrangler prints a **`*.workers.dev`** URL (unless you use a custom domain). Set `site` in `astro.config.mjs` to that URL (or your domain). If you still use a **`*.pages.dev`** hostname via a separate Pages project or redirect, keep `site` aligned with the URL users actually open.
 
-### Why `pnpm pages:upload` failed before (error 10000)
+### pnpm build scripts
 
-Wrangler uses **`CLOUDFLARE_API_TOKEN`**. The default token in the build environment often **cannot** call the Pages “direct upload” API. A **custom** token with **Cloudflare Pages → Edit** (above) fixes that.
-
-### Deploy / version commands (summary)
-
-| Situation | Deploy command |
-|-----------|----------------|
-| Field optional and saves | Try **empty** first; if the site is correct, leave it. |
-| Field required | **`pnpm pages:upload`** (with the API token above). |
-| Must fill “Version command” with something harmless | **`pnpm pages:noop`** |
-
-Do **not** use `npx wrangler deploy` for this **Pages** repo unless you intentionally move to **Workers Static Assets** and follow Workers docs (different defaults than Pages).
-
-**Non-production branch deploy command:** Prefer **`pnpm pages:upload`** (with the same token) so previews deploy real files; if blank causes “Invalid request body”, **`pnpm pages:noop`** is acceptable only for that field if previews are not critical.
-
-**External CI:** same token variables as in [Direct Upload from CI](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
-
-After the first deploy, set `site` in `astro.config.mjs` to your real `*.pages.dev` URL or custom domain so canonical URLs behave correctly.
-
-**CLI deploy** (creates the project on first run if it does not exist):
-
-```bash
-pnpm exec wrangler login
-pnpm pages:deploy
-```
+`package.json` includes `pnpm.onlyBuiltDependencies` so **esbuild**, **sharp**, and **workerd** install scripts run in CI (Wrangler needs them).
 
 ## Content
 
 - **Guides:** `src/content/guides/*.md`
 - **Updates:** `src/content/updates/*.md` (frontmatter includes `pubDate`; omit or set `draft: true` to hide from lists when you extend the schema)
 
-Edit Markdown, commit, push—Pages rebuilds from Git.
+Edit Markdown, commit, push—your Git-connected build runs again.
