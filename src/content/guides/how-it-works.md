@@ -1,6 +1,6 @@
 ---
 title: How the stack fits together
-description: Astro builds a static site; Markdown lives in the repo; Netlify serves the build output.
+description: Astro builds a static site; Markdown lives in the repo; Cloudflare serves the build output.
 ---
 
 This page explains the moving parts using filler text so you can focus on structure rather than wording.
@@ -13,6 +13,6 @@ Astro components and layouts are written with TypeScript for safer props and bet
 
 1. Authors commit Markdown under `src/content/`.
 2. CI (or your machine) runs `pnpm build`.
-3. Netlify publishes the `dist/` folder as a static site.
+3. Cloudflare publishes the `dist/` folder as a static site.
 
 Donec eu nibh at nisi bibendum sagittis. Morbi tincidunt lacus nec elit vehicula, sit amet fermentum augue pulvinar. Aliquam erat volutpat.

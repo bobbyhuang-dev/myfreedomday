@@ -9,7 +9,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer feugiat urna id
 
 ## Why Markdown in Git
 
-Keeping articles and guides as `.md` files means edits are reviewable, diff-friendly, and free of a database. Astro turns each file into a page at build time, which pairs naturally with **Netlify** for hosting.
+Keeping articles and guides as `.md` files means edits are reviewable, diff-friendly, and free of a database. Astro turns each file into a page at build time, which pairs naturally with a static host like **Cloudflare Pages**.
 
 ## What you might do next
 

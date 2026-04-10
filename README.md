@@ -1,13 +1,13 @@
 # MyFreedomDay
 
-MyFreedomDay is a static informational demo site built with **Astro** and **TypeScript**. Content lives in `src/content/` as Markdown, is validated with Astro content collections, and is published as a static site on **Netlify**.
+MyFreedomDay is a static informational demo site built with **Astro** and **TypeScript**. Content lives in `src/content/` as Markdown, is validated with Astro content collections, and is published as a static site on **Cloudflare**.
 
 ## Stack
 
 - **Framework**: Astro
 - **Language**: TypeScript
 - **Content**: Markdown content collections in `src/content/`
-- **Hosting**: Netlify
+- **Hosting**: Cloudflare
 
 ## Commands
 
@@ -17,24 +17,30 @@ MyFreedomDay is a static informational demo site built with **Astro** and **Type
 | `pnpm dev`     | Start dev server at `http://localhost:4321` |
 | `pnpm build`   | Build the production site to `dist/`        |
 | `pnpm preview` | Preview the production build locally        |
+| `pnpm pages:upload` | Upload or deploy the built site to Cloudflare |
 
 ## Deployment
 
-This repo is configured for Netlify.
+This repo now includes Cloudflare deployment wiring:
 
 - **Build command**: `pnpm build`
-- **Publish directory**: `dist`
-- **Node version**: `22`
-- **Netlify config**: `netlify.toml`
-- **Canonical site URL**: `https://myfreedomday-astro-2026.netlify.app`
+- **Build output**: `dist`
+- **Deploy command**: `pnpm pages:upload`
+- **Wrangler config**: `wrangler.jsonc`
+- **Pinned Node version**: `.node-version`
 
-For a manual production deploy from a machine that is already logged in to Netlify:
+For Cloudflare Pages Git integration, the dashboard should only need:
+
+- **Build command**: `pnpm build`
+- **Build directory**: `dist`
+
+If you are using a Cloudflare build that expects a custom deploy command, use:
 
 ```bash
-netlify deploy --build --prod
+pnpm pages:upload
 ```
 
-If you connect the repository to Netlify, pushes can trigger deployments automatically.
+You can override the default Cloudflare Pages project name by setting `CLOUDFLARE_PAGES_PROJECT_NAME`.
 
 ## Content
 

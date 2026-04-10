@@ -4,8 +4,9 @@ interface Props {
 	description?: string;
 }
 
-const { title, description = 'Informational demo site built with Astro, Markdown in Git, and static hosting on Netlify.' } = Astro.props;
-const fullTitle = title === 'MyFreedomDay' ? title : `${title} · MyFreedomDay`;
+const { title, description = 'Informational site focused on raising awareness about modern slavery.' } = Astro.props;
+const siteName = 'Understand modern slavery';
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 ---
 
 <!doctype html>
@@ -22,7 +23,7 @@ const fullTitle = title === 'MyFreedomDay' ? title : `${title} · MyFreedomDay`;
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="inner">
-				<a class="brand" href="/">MyFreedomDay</a>
+				<a class="brand" href="/">Understand modern slavery</a>
 				<nav aria-label="Primary">
 					<ul>
 						<li><a href="/">Home</a></li>

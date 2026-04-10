@@ -9,11 +9,15 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "astro build",
+		"pages:upload": "node ./scripts/pages-upload.mjs",
 		"preview": "astro preview",
 		"astro": "astro"
 	},
+	"devDependencies": {
+		"wrangler": "^4.81.1"
+	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["esbuild", "sharp"]
+		"onlyBuiltDependencies": ["esbuild", "sharp", "workerd"]
 	},
 	"dependencies": {
 		"astro": "^6.1.4"

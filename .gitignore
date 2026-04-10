@@ -4,6 +4,7 @@ dist/
 
 # dependencies
 node_modules/
+.pnpm-store/
 
 # logs
 *.log
@@ -30,6 +31,7 @@ Thumbs.db
 # deployment artifacts
 .vercel/
 .netlify/
+.wrangler/
 
 # TypeScript
 *.tsbuildinfo
