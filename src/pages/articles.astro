@@ -1,0 +1,238 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const articleOrder = ['what-is-modern-slavery', 'what-is-myfreedomday'];
+
+const normalizeSearchText = (value: string) =>
+	value
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/[^a-zA-Z0-9]+/g, ' ')
+		.toLowerCase()
+		.replace(/\s+/g, ' ')
+		.trim();
+
+const allGuides = await getCollection('guides');
+const articles = [...allGuides]
+	.sort((left, right) => {
+		const leftIndex = articleOrder.indexOf(left.id);
+		const rightIndex = articleOrder.indexOf(right.id);
+
+		if (leftIndex !== -1 || rightIndex !== -1) {
+			if (leftIndex === -1) return 1;
+			if (rightIndex === -1) return -1;
+			return leftIndex - rightIndex;
+		}
+
+		return left.data.title.localeCompare(right.data.title);
+	})
+	.map((article) => {
+		const summary = article.data.description || 'Read this article.';
+		const body = article.body ?? '';
+
+		return {
+			...article,
+			summary,
+			searchText: normalizeSearchText(
+				`${article.data.title} ${summary} ${article.id.replace(/-/g, ' ')} ${body}`,
+			),
+		};
+	});
+---
+
+<BaseLayout
+	title="All articles"
+	description="Browse every article about modern slavery, human trafficking, and the #MyFreedomDay student campaign. Search by topic or title."
+>
+	<section class="hero">
+		<h1>Articles</h1>
+		<p class="lede">
+			Browse every article in one place, or use the search box to quickly find a topic you want to read.
+		</p>
+	</section>
+
+	<section class="articles-shell" aria-labelledby="article-library-title">
+		<div class="articles-toolbar">
+			<div>
+				<h2 id="article-library-title" class="section-title">Article library</h2>
+				<p class="muted">Select any article below to open its own page.</p>
+			</div>
+			<label class="search-field" for="article-search">
+				<span>Search articles</span>
+				<input
+					id="article-search"
+					name="article-search"
+					type="search"
+					placeholder="Search by title or topic"
+					autocomplete="off"
+				/>
+			</label>
+		</div>
+
+		<p class="meta" id="article-count">{articles.length} articles available</p>
+
+		<ul class="card-grid" id="article-list" aria-label="Browse articles">
+			{
+				articles.map((article) => (
+					<li
+						class="card article-card"
+						data-search={article.searchText}
+					>
+						<h2>
+							<a href={`/guides/${article.id}`}>{article.data.title}</a>
+						</h2>
+						<p>{article.summary}</p>
+						<a class="article-link" href={`/guides/${article.id}`}>Open article</a>
+					</li>
+				))
+			}
+		</ul>
+
+		<p class="muted empty-state" id="article-empty" hidden>No articles match that search right now.</p>
+	</section>
+
+	<script is:inline>
+		const normalizeSearchText = (value) =>
+			value
+				.replace(/([a-z])([A-Z])/g, '$1 $2')
+				.replace(/[^a-zA-Z0-9]+/g, ' ')
+				.toLowerCase()
+				.replace(/\s+/g, ' ')
+				.trim();
+
+		const setupArticleSearch = () => {
+			const searchInput = document.querySelector('#article-search');
+
+			if (!(searchInput instanceof HTMLInputElement) || searchInput.dataset.ready === 'true') {
+				return;
+			}
+
+			searchInput.dataset.ready = 'true';
+
+			const count = document.querySelector('#article-count');
+			const emptyState = document.querySelector('#article-empty');
+			const cards = Array.from(document.querySelectorAll('.article-card'));
+			const total = cards.length;
+			const initialQuery = new URL(window.location.href).searchParams.get('q') ?? '';
+
+			if (initialQuery && !searchInput.value) {
+				searchInput.value = initialQuery;
+			}
+
+			const updateUrl = (query) => {
+				const nextUrl = new URL(window.location.href);
+
+				if (query) {
+					nextUrl.searchParams.set('q', query);
+				} else {
+					nextUrl.searchParams.delete('q');
+				}
+
+				history.replaceState(history.state, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+			};
+
+			const updateResults = () => {
+				const rawQuery = searchInput.value.trim();
+				const query = normalizeSearchText(rawQuery);
+				let visible = 0;
+
+				cards.forEach((card) => {
+					const searchableText = card.getAttribute('data-search') ?? '';
+					const matches = !query || searchableText.includes(query);
+
+					card.hidden = !matches;
+					if (matches) visible += 1;
+				});
+
+				if (count) {
+					count.textContent = query ? `${visible} of ${total} articles shown` : `${total} articles available`;
+				}
+
+				if (emptyState) {
+					emptyState.hidden = visible !== 0;
+				}
+
+				updateUrl(rawQuery);
+			};
+
+			searchInput.addEventListener('input', updateResults);
+			searchInput.addEventListener('search', updateResults);
+			updateResults();
+		};
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', setupArticleSearch, { once: true });
+		} else {
+			setupArticleSearch();
+		}
+
+		document.addEventListener('astro:page-load', setupArticleSearch);
+	</script>
+</BaseLayout>
+
+<style>
+	.articles-shell {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.articles-toolbar {
+		display: flex;
+		gap: 1rem;
+		align-items: end;
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.articles-toolbar .section-title {
+		margin-bottom: 0.35rem;
+	}
+
+	.search-field {
+		display: grid;
+		gap: 0.45rem;
+		min-width: min(100%, 20rem);
+		font-weight: 600;
+	}
+
+	.search-field span {
+		font-size: 0.95rem;
+	}
+
+	.search-field input {
+		width: 100%;
+		padding: 0.75rem 0.9rem;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+		background: var(--surface);
+		color: var(--text);
+		font: inherit;
+	}
+
+	.search-field input:focus {
+		outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+		outline-offset: 2px;
+		border-color: var(--accent);
+	}
+
+	.article-card {
+		gap: 0.75rem;
+	}
+
+	.article-card[hidden] {
+		display: none;
+	}
+
+	.article-link {
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.article-link:hover {
+		text-decoration: underline;
+	}
+
+	.empty-state {
+		margin-top: 0.25rem;
+	}
+</style>

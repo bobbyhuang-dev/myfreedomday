@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	articles?: CollectionEntry<'guides'>[];
+	label?: string;
+}
+
+const { articles = [], label = 'Recommended articles' }: Props = Astro.props;
+---
+
+<ul class="card-grid" aria-label={label}>
+	{
+		articles.map((article) => {
+			const summary = article.data.description.trim();
+
+			return (
+				<li class="card">
+					<h2>
+						<a href={`/guides/${article.id}`}>{article.data.title}</a>
+					</h2>
+					{summary && <p>{summary}</p>}
+				</li>
+			);
+		})
+	}
+</ul>

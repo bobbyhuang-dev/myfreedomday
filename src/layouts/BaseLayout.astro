@@ -2,22 +2,95 @@
 interface Props {
 	title: string;
 	description?: string;
+	wide?: boolean;
+	/** Set to 'article' for guide pages, 'website' elsewhere. */
+	ogType?: 'website' | 'article';
+	/** Absolute or site-relative URL to a social preview image. */
+	image?: string;
+	/** Keywords for the description meta tag — low value for Google but still read by some engines. */
+	keywords?: string[];
+	/** If true, instruct crawlers not to index this page. */
+	noindex?: boolean;
 }
 
-const { title, description = 'Informational site focused on raising awareness about modern slavery.' } = Astro.props;
+const {
+	title,
+	description = 'Learn about modern slavery and the #MyFreedomDay campaign — what it is, who it affects, how to spot it, and how to get help.',
+	wide = false,
+	ogType = 'website',
+	image = '/favicon.svg',
+	keywords = [
+		'modern slavery',
+		'human trafficking',
+		'MyFreedomDay',
+		'CNN Freedom Project',
+		'forced labour',
+		'student awareness',
+	],
+	noindex = false,
+} = Astro.props;
+
 const siteName = 'Understand modern slavery';
+const siteDescription =
+	'An educational site about modern slavery and the #MyFreedomDay campaign — what it is, who it affects, how to spot it, and how to get help.';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+
+// Astro.site is set in astro.config.mjs, so Astro.url is always resolvable against it.
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const socialImageURL = new URL(image, Astro.site).href;
+
+const websiteSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	name: siteName,
+	url: Astro.site?.href,
+	description: siteDescription,
+	inLanguage: 'en',
+	publisher: {
+		'@type': 'Organization',
+		name: siteName,
+		url: Astro.site?.href,
+	},
+};
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="description" content={description} />
+
 		<title>{fullTitle}</title>
+		<meta name="description" content={description} />
+		{keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		{!noindex && <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />}
+
+		<link rel="canonical" href={canonicalURL.href} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+		<link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+
+		<meta name="theme-color" content="#0d6e6e" />
+		<meta name="color-scheme" content="light" />
+		<meta name="format-detection" content="telephone=no" />
+
+		<meta property="og:type" content={ogType} />
+		<meta property="og:site_name" content={siteName} />
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL.href} />
+		<meta property="og:image" content={socialImageURL} />
+		<meta property="og:locale" content="en_US" />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={fullTitle} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={socialImageURL} />
+
+		<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+		<slot name="head" />
 	</head>
 	<body>
 		<a class="skip" href="#main">Skip to content</a>
@@ -27,20 +100,26 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 				<nav aria-label="Primary">
 					<ul>
 						<li><a href="/">Home</a></li>
-						<li><a href="/guides/what-is-this">Guides</a></li>
-						<li><a href="/updates">Updates</a></li>
-						<li><a href="/contact">Contact</a></li>
+						<li><a href="/articles">Articles</a></li>
 					</ul>
 				</nav>
 			</div>
 		</header>
-		<main id="main" class="main">
+		<main id="main" class={`main${wide ? ' main-wide' : ''}`}>
 			<slot />
 		</main>
 		<footer class="site-footer">
 			<div class="inner">
+				<nav class="footer-nav" aria-label="Footer">
+					<a href="/">Home</a>
+					<a href="/articles">Articles</a>
+				</nav>
 				<p>
-					Demo informational site — replace this footer with your org’s details, policies, and social links.
+					All information on this site is shared under the
+					<a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International (CC BY 4.0)</a> license.
+				</p>
+				<p class="footer-credit">
+					Created by <a href="https://github.com/bobbyhuang-dev">Bobby Huang</a>
 				</p>
 			</div>
 		</footer>
@@ -166,6 +245,112 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 		padding: 2rem 1.25rem 3rem;
 	}
 
+	.main-wide {
+		max-width: calc(var(--max) + 4rem + 16rem);
+	}
+
+	.guide-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 2.5rem;
+	}
+
+	@media (min-width: 64rem) {
+		.guide-layout {
+			grid-template-columns: minmax(0, 1fr) 14rem;
+			align-items: start;
+		}
+	}
+
+	.toc {
+		order: -1;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+		background: var(--surface);
+		padding: 1rem 1.1rem;
+	}
+
+	@media (min-width: 64rem) {
+		.toc {
+			order: 0;
+			border: none;
+			background: transparent;
+			padding: 0;
+			position: sticky;
+			top: calc(var(--header-h) + 1.5rem);
+			max-height: calc(100vh - var(--header-h) - 3rem);
+			overflow-y: auto;
+		}
+	}
+
+	.toc-inner {
+		font-size: 0.9rem;
+	}
+
+	.toc-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0 0 0.75rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--border);
+		font-weight: 650;
+		color: var(--text);
+		font-size: 0.95rem;
+	}
+
+	.toc-icon {
+		color: var(--muted);
+		flex: 0 0 auto;
+	}
+
+	.toc ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.toc-item {
+		border-left: 2px solid transparent;
+		transition: border-color 0.15s ease;
+	}
+
+	.toc-item a {
+		display: block;
+		color: var(--muted);
+		text-decoration: none;
+		line-height: 1.35;
+		padding: 0.45rem 0;
+		transition: color 0.15s ease;
+	}
+
+	.toc-depth-2 > a {
+		padding-left: 0.75rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.toc-depth-3 > a {
+		padding-left: 1.5rem;
+		font-size: 0.87rem;
+	}
+
+	.toc-item:hover {
+		border-left-color: color-mix(in srgb, var(--accent) 40%, transparent);
+	}
+
+	.toc-item a:hover {
+		color: var(--accent);
+	}
+
+	.toc-item:has(a.is-active) {
+		border-left-color: var(--accent);
+	}
+
+	.toc-item a.is-active {
+		color: var(--accent);
+	}
+
 	.site-footer {
 		border-top: 1px solid var(--border);
 		background: var(--surface);
@@ -175,12 +360,25 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 		max-width: calc(var(--max) + 4rem);
 		margin: 0 auto;
 		padding: 1.5rem 1.25rem;
+		display: grid;
+		gap: 0.75rem;
 	}
 
 	.site-footer p {
 		margin: 0;
 		font-size: 0.9rem;
 		color: var(--muted);
+	}
+
+	.footer-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1rem;
+	}
+
+	.footer-nav a,
+	.footer-credit a {
+		font-weight: 500;
 	}
 
 	.prose {
@@ -194,16 +392,64 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 		font-weight: 700;
 	}
 
+	.breadcrumbs {
+		font-size: 0.85rem;
+		color: var(--muted);
+		margin: 0 0 1rem;
+	}
+
+	.breadcrumbs ol {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem 0.5rem;
+	}
+
+	.breadcrumbs li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0;
+		margin: 0;
+	}
+
+	.breadcrumbs li::marker {
+		content: '';
+	}
+
+	.breadcrumbs li + li::before {
+		content: '/';
+		color: var(--border);
+	}
+
+	.breadcrumbs a {
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.breadcrumbs a:hover {
+		color: var(--accent);
+	}
+
+	.breadcrumbs [aria-current='page'] {
+		color: var(--text);
+		font-weight: 600;
+	}
+
 	.prose h2 {
 		font-size: 1.35rem;
 		margin: 2rem 0 0.75rem;
 		font-weight: 650;
+		scroll-margin-top: calc(var(--header-h) + 1rem);
 	}
 
 	.prose h3 {
 		font-size: 1.1rem;
 		margin: 1.5rem 0 0.5rem;
 		font-weight: 600;
+		scroll-margin-top: calc(var(--header-h) + 1rem);
 	}
 
 	.prose p {
@@ -211,17 +457,154 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 		color: var(--text);
 	}
 
-	.prose ul {
+	.prose ul,
+	.prose ol {
 		margin: 0 0 1rem;
-		padding-left: 1.25rem;
+		padding-left: 1.5rem;
 	}
 
 	.prose li {
-		margin-bottom: 0.35rem;
+		padding-left: 0.25rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.prose li::marker {
+		color: var(--accent);
+		font-weight: 650;
+	}
+
+	.prose li > ul,
+	.prose li > ol {
+		margin-top: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.prose ul ul,
+	.prose ol ul {
+		list-style-type: circle;
+	}
+
+	.prose ul ul ul,
+	.prose ol ul ul {
+		list-style-type: square;
+	}
+
+	.prose ul:has(input[type='checkbox']) {
+		list-style: none;
+		padding-left: 0;
+	}
+
+	.prose li:has(input[type='checkbox']) {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.65rem;
+		padding-left: 0;
+	}
+
+	.prose li:has(input[type='checkbox'])::marker {
+		content: '';
+	}
+
+	.prose input[type='checkbox'] {
+		width: 1rem;
+		height: 1rem;
+		margin: 0.25rem 0 0;
+		accent-color: var(--accent);
+		flex: 0 0 auto;
 	}
 
 	.prose strong {
 		font-weight: 650;
+	}
+
+	.prose img {
+		max-width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+		margin: 0.5rem 0 1rem;
+	}
+
+	.prose .description {
+		color: var(--muted);
+		font-size: 0.9rem;
+		margin: -0.25rem 0 1.25rem;
+	}
+
+	.prose .tldr {
+		margin: 0 0 1.5rem;
+		padding: 0.85rem 1.15rem;
+		border: 1px solid var(--border);
+		border-left: 4px solid var(--accent);
+		border-radius: 0.5rem;
+		background: var(--surface);
+		font-size: 0.95rem;
+	}
+
+	.prose .tldr strong {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-size: 0.8rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+
+	.prose .tldr p {
+		margin: 0;
+		color: var(--text);
+	}
+
+	.prose blockquote {
+		margin: 0 0 1.5rem;
+		padding: 1rem 1.25rem 1rem 3rem;
+		border-left: 4px solid var(--accent);
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+		position: relative;
+	}
+
+	.prose blockquote::before {
+		content: '“';
+		position: absolute;
+		left: 0.9rem;
+		top: 0.35rem;
+		font-size: 2.5rem;
+		line-height: 1;
+		color: color-mix(in srgb, var(--accent) 45%, transparent);
+		font-family: Georgia, 'Times New Roman', serif;
+	}
+
+	.prose blockquote p {
+		margin: 0;
+	}
+
+	.prose blockquote p + p {
+		margin-top: 0.75rem;
+	}
+
+	.prose table {
+		width: 100%;
+		margin: 0 0 1.5rem;
+		border-collapse: collapse;
+		background: var(--surface);
+		border: 1px solid var(--border);
+	}
+
+	.prose th,
+	.prose td {
+		padding: 0.75rem 0.85rem;
+		text-align: left;
+		vertical-align: top;
+		border: 1px solid var(--border);
+	}
+
+	.prose th {
+		font-weight: 650;
+		background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+	}
+
+	.prose tr:nth-child(even) td {
+		background: color-mix(in srgb, var(--bg) 65%, var(--surface));
 	}
 
 	.hero {
@@ -293,6 +676,39 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 		font-size: 1.25rem;
 		margin: 2.5rem 0 1rem;
 		font-weight: 650;
+	}
+
+	.resources-callout {
+		max-width: none;
+		margin: 2.5rem 0 1.5rem;
+		padding: 1.5rem 1.75rem;
+		border: 1px solid var(--border);
+		border-left: 4px solid #b42318;
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, #b42318 5%, var(--surface));
+	}
+
+	.resources-callout h2 {
+		margin-top: 0;
+		margin-bottom: 0.5rem;
+		font-size: 1.2rem;
+		color: #b42318;
+	}
+
+	.resources-callout ul {
+		margin-bottom: 0.75rem;
+	}
+
+	.resources-callout li {
+		margin-bottom: 0.75rem;
+	}
+
+	.resources-callout li::marker {
+		color: #b42318;
+	}
+
+	.resources-callout p:last-child {
+		margin-bottom: 0;
 	}
 
 	.muted {

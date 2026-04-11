@@ -1,17 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import FeaturedArticles from '../components/FeaturedArticles.astro';
 import { getCollection } from 'astro:content';
 
-const guides = await getCollection('guides');
-const guideLinks = [...guides].sort((a, b) => a.data.title.localeCompare(b.data.title));
+const articleOrder = ['what-is-modern-slavery', 'what-is-myfreedomday'];
+const allGuides = await getCollection('guides');
+const featuredArticles = articleOrder.flatMap((id) => {
+	const entry = allGuides.find((guide) => guide.id === id);
 
-const updates = await getCollection('updates', ({ data }) => !data.draft);
-const recentUpdates = [...updates]
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.slice(0, 3);
+	return entry ? [entry] : [];
+});
+const otherArticles = allGuides.filter((entry) => !articleOrder.includes(entry.id));
 ---
 
-<BaseLayout title="Understand modern slavery">
+<BaseLayout
+	title="Understand modern slavery"
+	description="A student-built 2026 #MyFreedomDay project. Learn what modern slavery and human trafficking are, how to spot the signs, and where to get help."
+>
 	<section class="hero">
 		<h1>Understand modern slavery</h1>
 		<p class="lede">
@@ -24,48 +29,61 @@ const recentUpdates = [...updates]
 		</p>
 	</section>
 
-	<h2 class="section-title">Guides</h2>
-	<ul class="card-grid">
-		{
-			guideLinks.map((g) => (
-				<li class="card">
-					<h2>
-						<a href={`/guides/${g.id}`}>{g.data.title}</a>
-					</h2>
-					<p>{g.data.description}</p>
-				</li>
-			))
-		}
-	</ul>
+	<section class="prose">
+		<p>
+			If this your first time viewing this site, I recommend you to read the following two articles so you understand the basics of
+			Modern Slavery and #MyFreedomDay event.
+		</p>
+	</section>
 
-	<h2 class="section-title">Recent updates</h2>
-	{
-		recentUpdates.length === 0 ? (
-			<p class="muted">No updates yet.</p>
-		) : (
-			<ul class="card-grid">
-				{recentUpdates.map((u) => (
-					<li class="card">
-						<p class="meta">
-							<time datetime={u.data.pubDate.toISOString()}>
-								{u.data.pubDate.toLocaleDateString('en-US', {
-									year: 'numeric',
-									month: 'short',
-									day: 'numeric',
-								})}
-							</time>
-						</p>
-						<h2>
-							<a href={`/updates/${u.id}`}>{u.data.title}</a>
-						</h2>
-						<p>{u.data.description}</p>
-					</li>
-				))}
-			</ul>
-		)
-	}
+	<FeaturedArticles articles={featuredArticles} />
 
-	<p class="muted" style="margin-top: 2.5rem;">
-		Edit Markdown in <code>src/content/</code>, run <code>pnpm dev</code> locally, and publish with your usual Git workflow.
-	</p>
+	<section class="prose resources-callout" aria-labelledby="help-resources">
+		<h2 id="help-resources">Need help? Resources and hotlines</h2>
+		<p>
+			If you or someone you know is a victim of human trafficking, consider reaching out to the following resources and
+			hotlines. These services are free, confidential, and staffed by trained professionals. <strong>If you or someone else
+			is in immediate danger, call your local emergency number first.</strong>
+		</p>
+		<ul>
+			<li>
+				<strong>United States</strong> — <a href="https://humantraffickinghotline.org/">National Human Trafficking Hotline</a>.
+				Call <strong>1-888-373-7888</strong>, text <strong>“HELP” or “INFO” to 233733 (BeFree)</strong>, or chat online. Available 24/7 in
+				English, Spanish, and many other languages.
+			</li>
+			<li>
+				<strong>United Kingdom</strong> — <a href="https://www.modernslaveryhelpline.org/">Modern Slavery &amp; Exploitation Helpline</a>
+				run by <a href="https://www.unseenuk.org/">Unseen</a>. Call <strong>08000 121 700</strong>, 365 days a year. You can also
+				<a href="https://www.modernslaveryhelpline.org/report">report online</a>.
+			</li>
+			<li>
+				<strong>Australia</strong> — <a href="https://www.afp.gov.au/">Australian Federal Police</a>. Call
+				<strong>131 237 (131 AFP)</strong> to report suspected modern slavery. For survivor support, contact the
+				<a href="https://www.redcross.org.au/migration/support-for-trafficked-people/">Australian Red Cross Support for Trafficked People Program</a>
+				on <strong>1800 113 015</strong>.
+			</li>
+			<li>
+				<strong>China (mainland)</strong> — In an emergency, call the police on <strong>110</strong>. The
+				<a href="https://www.unicef.cn/en/stories/what-do-if-you-suspect-child-has-been-abducted-trafficked-or-exploited">All-China Women's Federation</a>
+				also runs a nationwide women's and children's rights hotline at <strong>12338</strong>, which handles reports of
+				abduction, forced marriage, and trafficking of women and children.
+			</li>
+			<li>
+				<strong>Hong Kong</strong> — In an emergency, call <strong>999</strong>. The
+				<a href="https://www.police.gov.hk/ppp_en/04_crime_matters/trafficking.html">Hong Kong Police Force's Trafficking in Persons page</a>
+				has more information on reporting and support.
+			</li>
+		</ul>
+		<p class="muted">
+			If you are outside these regions, contact your local emergency services, or search for an accredited anti-trafficking
+			organisation in your country.
+		</p>
+	</section>
+
+	<p class="muted" style="margin-top: 1rem;">I've also written some other articles, feel free to check them out.</p>
+
+	<h2 id="articles" class="section-title">Articles</h2>
+	<p class="muted">Open the full article library to browse or search every article in one place.</p>
+	<p><a href="/articles">Browse all articles</a></p>
+	{otherArticles.length > 0 && <FeaturedArticles articles={otherArticles} label="More articles" />}
 </BaseLayout>

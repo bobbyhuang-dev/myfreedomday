@@ -7,17 +7,8 @@ const guides = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		description: z.string(),
+		tldr: z.string().optional(),
 	}),
 });
 
-const updates = defineCollection({
-	loader: glob({ pattern: '**/*.md', base: './src/content/updates' }),
-	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		pubDate: z.coerce.date(),
-		draft: z.boolean().optional(),
-	}),
-});
-
-export const collections = { guides, updates };
+export const collections = { guides };

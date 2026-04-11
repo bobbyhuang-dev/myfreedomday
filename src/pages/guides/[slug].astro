@@ -11,13 +11,188 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+
+const canonicalURL = new URL(`/guides/${entry.id}/`, Astro.site);
+const articlesURL = new URL('/articles/', Astro.site);
+
+const articleSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'Article',
+	headline: entry.data.title,
+	description: entry.data.description,
+	url: canonicalURL.href,
+	inLanguage: 'en',
+	isAccessibleForFree: true,
+	mainEntityOfPage: canonicalURL.href,
+	author: {
+		'@type': 'Organization',
+		name: 'Understand modern slavery',
+	},
+	publisher: {
+		'@type': 'Organization',
+		name: 'Understand modern slavery',
+		url: Astro.site?.href,
+	},
+	about: [
+		{ '@type': 'Thing', name: 'Modern slavery' },
+		{ '@type': 'Thing', name: 'Human trafficking' },
+		{ '@type': 'Thing', name: '#MyFreedomDay' },
+	],
+};
+
+const breadcrumbSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: 'Home',
+			item: Astro.site?.href,
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: 'Articles',
+			item: articlesURL.href,
+		},
+		{
+			'@type': 'ListItem',
+			position: 3,
+			name: entry.data.title,
+			item: canonicalURL.href,
+		},
+	],
+};
 ---
 
-<BaseLayout title={entry.data.title} description={entry.data.description}>
-	<article class="prose">
-		<h1>{entry.data.title}</h1>
-		<p class="muted">{entry.data.description}</p>
-		<Content />
-	</article>
+<BaseLayout
+	title={entry.data.title}
+	description={entry.data.description}
+	wide
+	ogType="article"
+>
+	<script
+		slot="head"
+		type="application/ld+json"
+		set:html={JSON.stringify(articleSchema)}
+	/>
+	<script
+		slot="head"
+		type="application/ld+json"
+		set:html={JSON.stringify(breadcrumbSchema)}
+	/>
+	<div class="guide-layout">
+		<article class="prose">
+			<nav class="breadcrumbs" aria-label="Breadcrumb">
+				<ol>
+					<li><a href="/">Home</a></li>
+					<li><a href="/articles">Articles</a></li>
+					<li aria-current="page">{entry.data.title}</li>
+				</ol>
+			</nav>
+			<h1>{entry.data.title}</h1>
+			{entry.data.description && <p class="description">{entry.data.description}</p>}
+			{entry.data.tldr && (
+				<aside class="tldr">
+					<strong>TL;DR</strong>
+					<p>{entry.data.tldr}</p>
+				</aside>
+			)}
+			<Content />
+		</article>
+		{toc.length > 0 && (
+			<aside class="toc" aria-label="Table of contents">
+				<nav class="toc-inner">
+					<p class="toc-heading">
+						<svg
+							class="toc-icon"
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							aria-hidden="true"
+						>
+							<path d="M2 4h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+							<path d="M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+							<path d="M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+						</svg>
+						<span>On this page</span>
+					</p>
+					<ul>
+						{toc.map((h) => (
+							<li class={`toc-item toc-depth-${h.depth}`}>
+								<a href={`#${h.slug}`} data-toc-link={h.slug}>{h.text}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</aside>
+		)}
+	</div>
 </BaseLayout>
+
+<script>
+	const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+	if (links.length > 0) {
+		const bySlug = new Map<string, HTMLAnchorElement>();
+		links.forEach((link) => {
+			const slug = link.getAttribute('data-toc-link');
+			if (slug) bySlug.set(slug, link);
+		});
+
+		const headings = Array.from(bySlug.keys())
+			.map((slug) => document.getElementById(slug))
+			.filter((el): el is HTMLElement => el !== null);
+
+		const setActive = (slug: string | null) => {
+			links.forEach((link) => link.classList.remove('is-active'));
+			if (slug) bySlug.get(slug)?.classList.add('is-active');
+		};
+
+		// Offset accounts for the sticky site header so a heading counts
+		// as "current" slightly before it reaches the very top of the viewport.
+		const offset = 100;
+
+		const update = () => {
+			if (headings.length === 0) return;
+
+			// If the user has scrolled to the bottom of the page, force-activate
+			// the last heading — otherwise short trailing sections can never win
+			// the "closest to the top" check.
+			const scrollBottom = window.scrollY + window.innerHeight;
+			const pageBottom = document.documentElement.scrollHeight;
+			if (scrollBottom >= pageBottom - 4) {
+				setActive(headings[headings.length - 1].id);
+				return;
+			}
+
+			// Otherwise, pick the last heading whose top has crossed the offset line.
+			let current: string | null = headings[0].id;
+			for (const h of headings) {
+				if (h.getBoundingClientRect().top - offset <= 0) {
+					current = h.id;
+				} else {
+					break;
+				}
+			}
+			setActive(current);
+		};
+
+		let ticking = false;
+		const onScroll = () => {
+			if (ticking) return;
+			ticking = true;
+			requestAnimationFrame(() => {
+				update();
+				ticking = false;
+			});
+		};
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onScroll);
+		update();
+	}
+</script>
