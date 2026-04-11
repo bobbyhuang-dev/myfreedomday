@@ -1,4 +1,6 @@
 ---
+import { serializeJsonLd } from '../utils/serialize-json-ld';
+
 interface Props {
 	title: string;
 	description?: string;
@@ -90,7 +92,7 @@ const websiteSchema = {
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={socialImageURL} />
 
-		<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+		<script is:inline type="application/ld+json" set:html={serializeJsonLd(websiteSchema)} />
 		<slot name="head" />
 	</head>
 	<body>

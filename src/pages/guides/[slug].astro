@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
+import { serializeJsonLd } from '../../utils/serialize-json-ld';
 
 export async function getStaticPaths() {
 	const entries = await getCollection('guides');
@@ -75,14 +76,16 @@ const breadcrumbSchema = {
 	ogType="article"
 >
 	<script
+		is:inline
 		slot="head"
 		type="application/ld+json"
-		set:html={JSON.stringify(articleSchema)}
+		set:html={serializeJsonLd(articleSchema)}
 	/>
 	<script
+		is:inline
 		slot="head"
 		type="application/ld+json"
-		set:html={JSON.stringify(breadcrumbSchema)}
+		set:html={serializeJsonLd(breadcrumbSchema)}
 	/>
 	<div class="guide-layout">
 		<article class="prose">
