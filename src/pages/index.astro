@@ -38,6 +38,13 @@ const otherArticles = allGuides.filter((entry) => !articleOrder.includes(entry.i
 
 	<FeaturedArticles articles={featuredArticles} />
 
+	<p class="muted" style="margin-top: 1rem;">I've also written some other articles, feel free to check them out.</p>
+
+	<h2 id="articles" class="section-title">Articles</h2>
+	<p class="muted">Open the full article library to browse or search every article in one place.</p>
+	<p><a href="/articles">Browse all articles</a></p>
+	{otherArticles.length > 0 && <FeaturedArticles articles={otherArticles} label="More articles" />}
+
 	<section class="prose resources-callout" aria-labelledby="help-resources">
 		<h2 id="help-resources">Need help? Resources and hotlines</h2>
 		<p>
@@ -79,11 +86,4 @@ const otherArticles = allGuides.filter((entry) => !articleOrder.includes(entry.i
 			organisation in your country.
 		</p>
 	</section>
-
-	<p class="muted" style="margin-top: 1rem;">I've also written some other articles, feel free to check them out.</p>
-
-	<h2 id="articles" class="section-title">Articles</h2>
-	<p class="muted">Open the full article library to browse or search every article in one place.</p>
-	<p><a href="/articles">Browse all articles</a></p>
-	{otherArticles.length > 0 && <FeaturedArticles articles={otherArticles} label="More articles" />}
 </BaseLayout>

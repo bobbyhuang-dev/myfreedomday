@@ -35,3 +35,9 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Playwright
+.playwright-cli/
+
+# Vscode
+.vscode/

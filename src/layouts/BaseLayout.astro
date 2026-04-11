@@ -33,6 +33,7 @@ const {
 const siteName = 'Understand modern slavery';
 const siteDescription =
 	'An educational site about modern slavery and the #MyFreedomDay campaign — what it is, who it affects, how to spot it, and how to get help.';
+const siteLogo = '/favicon.svg';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 
 // Astro.site is set in astro.config.mjs, so Astro.url is always resolvable against it.
@@ -96,7 +97,10 @@ const websiteSchema = {
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="inner">
-				<a class="brand" href="/">Understand modern slavery</a>
+				<a class="brand" href="/">
+					<img class="brand-mark" src={siteLogo} alt="" width="32" height="32" />
+					<span>{siteName}</span>
+				</a>
 				<nav aria-label="Primary">
 					<ul>
 						<li><a href="/">Home</a></li>
@@ -110,6 +114,10 @@ const websiteSchema = {
 		</main>
 		<footer class="site-footer">
 			<div class="inner">
+				<a class="footer-brand" href="/">
+					<img class="brand-mark footer-brand-mark" src={siteLogo} alt="" width="28" height="28" />
+					<span>{siteName}</span>
+				</a>
 				<nav class="footer-nav" aria-label="Footer">
 					<a href="/">Home</a>
 					<a href="/articles">Articles</a>
@@ -138,6 +146,7 @@ const websiteSchema = {
 		--border: #e2e5eb;
 		--max: 42rem;
 		--header-h: 3.5rem;
+		--page-pad: clamp(1rem, 3vw, 1.5rem);
 		font-family:
 			system-ui,
 			-apple-system,
@@ -199,7 +208,7 @@ const websiteSchema = {
 	.site-header .inner {
 		max-width: calc(var(--max) + 4rem);
 		margin: 0 auto;
-		padding: 0.75rem 1.25rem;
+		padding: 0.75rem var(--page-pad);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -208,14 +217,26 @@ const websiteSchema = {
 	}
 
 	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
 		font-weight: 700;
 		font-size: 1.125rem;
+		line-height: 1.15;
 		color: var(--text);
 		text-decoration: none;
 	}
 
 	.brand:hover {
 		color: var(--accent);
+	}
+
+	.brand-mark {
+		flex: 0 0 auto;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 0.6rem;
+		transform: translateY(1px);
 	}
 
 	.site-header nav ul {
@@ -242,7 +263,7 @@ const websiteSchema = {
 		width: 100%;
 		max-width: calc(var(--max) + 4rem);
 		margin: 0 auto;
-		padding: 2rem 1.25rem 3rem;
+		padding: clamp(1.5rem, 4vw, 2rem) var(--page-pad) clamp(2.5rem, 6vw, 3rem);
 	}
 
 	.main-wide {
@@ -252,7 +273,7 @@ const websiteSchema = {
 	.guide-layout {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: 2.5rem;
+		gap: clamp(1.75rem, 4vw, 2.5rem);
 	}
 
 	@media (min-width: 64rem) {
@@ -263,7 +284,7 @@ const websiteSchema = {
 	}
 
 	.toc {
-		order: -1;
+		order: 1;
 		border: 1px solid var(--border);
 		border-radius: 0.5rem;
 		background: var(--surface);
@@ -359,7 +380,7 @@ const websiteSchema = {
 	.site-footer .inner {
 		max-width: calc(var(--max) + 4rem);
 		margin: 0 auto;
-		padding: 1.5rem 1.25rem;
+		padding: 1.5rem var(--page-pad);
 		display: grid;
 		gap: 0.75rem;
 	}
@@ -368,6 +389,27 @@ const websiteSchema = {
 		margin: 0;
 		font-size: 0.9rem;
 		color: var(--muted);
+	}
+
+	.footer-brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: fit-content;
+		font-weight: 700;
+		font-size: 1rem;
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	.footer-brand:hover {
+		color: var(--accent);
+	}
+
+	.footer-brand-mark {
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 0.5rem;
 	}
 
 	.footer-nav {
@@ -386,7 +428,7 @@ const websiteSchema = {
 	}
 
 	.prose h1 {
-		font-size: 2rem;
+		font-size: clamp(2rem, 5vw, 2.35rem);
 		line-height: 1.2;
 		margin: 0 0 0.75rem;
 		font-weight: 700;
@@ -620,7 +662,7 @@ const websiteSchema = {
 	}
 
 	.hero .lede {
-		font-size: 1.125rem;
+		font-size: clamp(1rem, 2.7vw, 1.125rem);
 		color: var(--muted);
 		margin: 0;
 		max-width: 36rem;
@@ -629,7 +671,7 @@ const websiteSchema = {
 	.card-grid {
 		display: grid;
 		gap: 1rem;
-		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -639,7 +681,7 @@ const websiteSchema = {
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 0.5rem;
-		padding: 1.25rem;
+		padding: clamp(1rem, 2vw, 1.25rem);
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
@@ -681,11 +723,86 @@ const websiteSchema = {
 	.resources-callout {
 		max-width: none;
 		margin: 2.5rem 0 1.5rem;
-		padding: 1.5rem 1.75rem;
+		padding: clamp(1rem, 3vw, 1.75rem);
 		border: 1px solid var(--border);
 		border-left: 4px solid #b42318;
 		border-radius: 0.5rem;
 		background: color-mix(in srgb, #b42318 5%, var(--surface));
+	}
+
+	@media (max-width: 48rem) {
+		.prose h2 {
+			font-size: 1.25rem;
+		}
+
+		.prose h3 {
+			font-size: 1rem;
+		}
+
+		.prose blockquote {
+			padding: 0.95rem 1rem 0.95rem 2.5rem;
+		}
+
+		.prose table {
+			display: block;
+			overflow-x: auto;
+			white-space: nowrap;
+			-webkit-overflow-scrolling: touch;
+		}
+	}
+
+	@media (max-width: 40rem) {
+		:root {
+			--header-h: 5.5rem;
+		}
+
+		.site-header .inner {
+			align-items: flex-start;
+			gap: 0.75rem;
+		}
+
+		.brand {
+			font-size: 1rem;
+		}
+
+		.site-header nav {
+			width: 100%;
+		}
+
+		.site-header nav ul {
+			gap: 0.5rem;
+		}
+
+		.site-header nav a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 2.25rem;
+			padding: 0.35rem 0.7rem;
+			border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+			border-radius: 999px;
+			background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+		}
+
+		.main {
+			padding-top: 1.25rem;
+		}
+
+		.toc {
+			padding: 0.9rem 1rem;
+		}
+
+		.hero {
+			margin-bottom: 1.5rem;
+		}
+
+		.hero h1 {
+			font-size: clamp(1.75rem, 8vw, 2.2rem);
+		}
+
+		.prose ul,
+		.prose ol {
+			padding-left: 1.25rem;
+		}
 	}
 
 	.resources-callout h2 {
